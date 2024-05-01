@@ -1,6 +1,8 @@
-import com.relevantcodes.extentreports.ExtentReports;
-import com.relevantcodes.extentreports.ExtentTest;
-import com.relevantcodes.extentreports.LogStatus;
+import com.aventstack.extentreports.ExtentReports;
+import com.aventstack.extentreports.ExtentTest;
+import com.aventstack.extentreports.Status;
+import com.aventstack.extentreports.reporter.ExtentSparkReporter;
+import com.aventstack.extentreports.reporter.configuration.Theme;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.ss.usermodel.Row;
@@ -38,20 +40,29 @@ public class Main {
         DesiredCapabilities des = new DesiredCapabilities();
 
         des.setCapability("os", "Windows");
-        des.setCapability("os_version", "11");
+        des.setCapability("os_version", "10");
         des.setCapability("browser", "chrome");
-        des.setCapability("browser_version", "105");
+        des.setCapability("browser_version", "124");
 
-        System.setProperty("webdriver.chrome.driver", "D:\\chromedriver_win32\\chromedriver.exe");
+        System.setProperty("webdriver.chrome.driver", "D:\\Пользователи\\User\\Downloads\\chromedriver-win64\\chromedriver.exe");
         driver = new RemoteWebDriver(new URL(url), des);
 //        driver = new ChromeDriver();
         driver.manage().window().maximize();
-        report = new com.relevantcodes.extentreports.ExtentReports("C:\\Users\\Yelkhan\\IdeaProjects\\webdriver\\src\\main\\report\\report.html");
-        test = report.startTest("Extent report");
+
+
+        ExtentReports report = new ExtentReports();
+        ExtentSparkReporter spark = new ExtentSparkReporter("D:\\projects\\webdriver\\src\\main\\report\\report.html");
+        spark.config().setTheme(Theme.STANDARD);
+        spark.config().setDocumentTitle("Отчет по автоматизированному тестированию");
+        spark.config().setReportName("Отчет по тестированию");
+        report.attachReporter(spark);
+        ExtentTest test = report.createTest("Black box testing");
+
+        //test = report.createTest("Black box testing");
         driver.get("https://aviata.kz/");
 
         // Load the file.
-        OPCPackage pkg = OPCPackage.open(new File("C:\\Users\\Yelkhan\\IdeaProjects\\webdriver\\src\\TestData.xlsx"));
+        OPCPackage pkg = OPCPackage.open(new File("D:\\projects\\webdriver\\src\\TestData.xlsx"));
 
         // Load he workbook.
         workbook = new XSSFWorkbook(pkg);
@@ -66,49 +77,48 @@ public class Main {
         MainPage mainPage = new MainPage(driver);
         Row row = sheet.getRow(0);
         mainPage.fillSearchingForm(row.getCell(0).getStringCellValue(), row.getCell(1).getStringCellValue());
-        test.log(LogStatus.INFO, "Searching the flights ");
+        test.log(Status.INFO, "Searching the flights ");
         mainPage.searchByForm();
-        test.log(LogStatus.PASS, "Flights were found");
+        test.log(Status.PASS, "Flights were found");
 
 
     }
 
     @Test(priority = 1)
     public void chooseFlight() throws InterruptedException, IOException {
-        test.log(LogStatus.INFO, "Choosing the flight");
+        test.log(Status.INFO, "Choosing the flight");
         SearchPage searchPage = new SearchPage(driver);
         searchPage.chooseFlight();
-        test.log(LogStatus.PASS, "Flight was chose");
+        test.log(Status.PASS, "Flight was chose");
 
 
     }
 
     @Test(priority = 2)
     public void fillBookingForm() throws InterruptedException, IOException {
-        test.log(LogStatus.INFO, "Booking the flight");
+        test.log(Status.INFO, "Booking the flight");
         BookingPage bookingPage = new BookingPage(driver);
         Row row = sheet.getRow(0);
         bookingPage.fillBookingForm(row.getCell(2).getStringCellValue(), row.getCell(3).getStringCellValue(), row.getCell(4).getStringCellValue(), row.getCell(5).getStringCellValue(), row.getCell(6).getStringCellValue(), row.getCell(7).getStringCellValue(), row.getCell(8).getStringCellValue(), row.getCell(9).getStringCellValue(), row.getCell(10).getStringCellValue());
-        test.log(LogStatus.INFO, "Form was filled");
+        test.log(Status.INFO, "Form was filled");
         bookingPage.sendBookingForm();
-        test.log(LogStatus.PASS, "Flight was booked");
+        test.log(Status.PASS, "Flight was booked");
     }
 
     @Test(priority = 3)
     public void pay() throws InterruptedException, IOException {
-        test.log(LogStatus.INFO, "Paying for the flight");
+        test.log(Status.INFO, "Paying for the flight");
         PaymentPage paymentPage = new PaymentPage(driver);
         paymentPage.pay();
-        test.log(LogStatus.PASS, "Flight was payed");
+        test.log(Status.PASS, "Flight was payed");
 
     }
 
 
     @AfterClass
     public void closeTheBrowser() {
-        test.log(LogStatus.INFO, "Close the browser");
+        test.log(Status.INFO, "Close the browser");
         driver.quit();
-        report.endTest(test);
         report.flush();
     }
 
